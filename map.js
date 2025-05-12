@@ -55,16 +55,14 @@ map.on('load', async () => {
     addBikeLaneLayer(map, 'boston_bike_lanes', 'boston_route');
     addBikeLaneLayer(map, 'cambri_bike_lanes', 'cambridge_route');
 
-    let jsonData;
     let stations;
     try {
         const jsonurl = 'assets/bluebikes_stations.json';
 
         // Await JSON fetch
         const jsonData = await d3.json(jsonurl);
-        console.log('Loaded JSON Data:', jsonData);
         stations = jsonData.data.stations;
-        console.log('Stations Array:', stations);
+        console.log('Loaded stations data');
 
     } catch (error) {
         console.error('Error loading JSON:', error);
@@ -98,6 +96,23 @@ map.on('load', async () => {
     map.on('zoom', updatePositions); // Update during zooming
     map.on('resize', updatePositions); // Update on window resize
     map.on('moveend', updatePositions); // Final adjustment after movement ends
+
+    let trips = null;
+    try {
+        trips = await d3.csv('assets/bluebikes_traffic.csv');
+        console.log('Loaded traffic data');
+    }
+    catch (error) {
+        console.error('Error loading CSV:', error);
+    };
+
+    const departures = d3.rollup(
+        trips,
+        (v) => v.length,
+        (d) => d.start_station_id,
+    );
+
+    // TODO: Calculating traffic at each station
 });
 
 
