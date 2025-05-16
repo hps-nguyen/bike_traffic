@@ -112,7 +112,36 @@ map.on('load', async () => {
         (d) => d.start_station_id,
     );
 
-    // TODO: Calculating traffic at each station
+    const arrivals = d3.rollup(
+        trips,
+        (v) => v.length,
+        (d) => d.end_station_id,
+    )
+
+    stations = stations.map((station) => {
+        let id = station.short_name;
+        station.arrivals = arrivals.get(id) ?? 0;
+        station.departures = departures.get(id) ?? 0;
+        station.totalTraffic = station.arrivals + station.departures;
+        return station;
+    });
+
+    const radiusScale = d3
+        .scaleSqrt()
+        .domain([0, d3.max(stations, (d) => d.totalTraffic)])
+        .range([0, 25]);
+
+    svg.selectAll('circle')
+        .attr('r', (d) => radiusScale(d.totalTraffic))
+        .each(function (d) {
+            d3.select(this)
+                .append('title')
+                .text(
+                    `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`,
+                );
+        });
+
+
 });
 
 
